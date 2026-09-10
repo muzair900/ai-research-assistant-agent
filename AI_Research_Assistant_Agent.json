@@ -1,0 +1,308 @@
+{
+  "name": "AI Research Assistant Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Return ONLY valid JSON. No extra text.\n\nIf a research paper is provided, return:\n{\n  \"decision\": \"SUMMARY\"\n}\n\nIf no research paper is provided, return:\n{\n  \"decision\": \"QA\"\n}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an AI Research Assistant specializing in cybersecurity research.  Your task is to analyze the provided research paper and generate a professional report.  Instructions: - Read the entire research paper carefully. - Identify whether the paper is related to AI and Cybersecurity. - If it is relevant, provide:   1. Paper Title   2. Research Objective   3. Methodology   4. AI / Machine Learning techniques used   5. Key Findings   6. Limitations   7. Future Research Directions   8. A concise summary (150–200 words) - If the paper is not related to AI or cybersecurity, explain why. - Do not invent information. If something is not mentioned, write \"Not mentioned.\" - Format the output with clear headings and bullet points."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -960,
+        -416
+      ],
+      "id": "6e939e6b-885a-4c21-bd49-43665515a0bd",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxOutputTokens": 2048,
+          "temperature": 0.2,
+          "topK": 32,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -1248,
+        -208
+      ],
+      "id": "e423cf8a-c8d4-482d-acca-a9f82557f8db",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9y3SSPFgVSdHsVZJ",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1888,
+        -416
+      ],
+      "id": "5d078ca9-bb0d-45e0-a553-09131c323302",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "703d6803-7cd4-4bb3-80bb-3ce9ef7281b3",
+              "leftValue": "={{ JSON.parse($json[\"text\"]).decision }}",
+              "rightValue": "QA",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -608,
+        -416
+      ],
+      "id": "527e61ef-e17f-46c0-9695-fd7902c390ff",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "<YOUR_GOOGLE_DRIVE_FILE_LINK>",
+          "mode": "url"
+        },
+        "options": {
+          "binaryPropertyName": "data",
+          "googleFileConversion": {},
+          "fileName": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1680,
+        -416
+      ],
+      "id": "2aa2b174-b0a3-4766-a829-2b20f7ddeb76",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "eS13jJMQadmmgcPR",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst item = $input.first().json;\nconsole.log(JSON.stringify(item));\nreturn [{ json: item }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1168,
+        -416
+      ],
+      "id": "800b781e-3721-40fb-9706-b78e99dc768e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "<YOUR_GOOGLE_DRIVE_FILE_LINK>",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/pdf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1472,
+        -416
+      ],
+      "id": "367d0abd-5687-4928-a15d-5d7ab2a4c578",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5673fd18-2f63-4e54-9df6-8d7e6fb9b475",
+              "name": "Result",
+              "value": "=Value: {{ $json[\"text\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        -432
+      ],
+      "id": "7f9980c9-1dc5-430c-9bad-e15b7fbfa4a1",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f1a9286-e56f-4e2d-8c36-6b15759e430d",
+              "name": "Summary_Result",
+              "value": "={{ $json[\"text\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        -176
+      ],
+      "id": "b20e4ac3-e7c9-46ac-9525-4e3b0aed2220",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "42eae8b1-ddf4-4210-83bb-4a47995fd912",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "87d1db6ca2f45fee1fd627f57dfd2ae19f89abeea5efcc5544511fc536b56f84"
+  },
+  "nodeGroups": [],
+  "id": "1fZJbMw5P701FcG0",
+  "tags": []
+}
